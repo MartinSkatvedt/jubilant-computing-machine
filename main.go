@@ -1,32 +1,79 @@
 package main
 
-import (
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
-)
+import "fmt"
 
-func main() {
-	pixelgl.Run(runGame)
+type Node struct {
+	value    int
+	next     *Node
+	previous *Node
 }
 
-func runGame() {
-	cfg := pixelgl.WindowConfig{
-		Title:     "Martins game",
-		Bounds:    pixel.R(0, 0, 1024, 768),
-		VSync:     true,
-		Resizable: true,
+func createNode(value int) *Node {
+	return &Node{value: value, next: nil, previous: nil}
+}
+
+func (head *Node) insertEnd(node *Node) {
+	next := head
+
+	for next.next != nil {
+		next = next.next
 	}
 
-	win, err := pixelgl.NewWindow(cfg)
-	if err != nil {
-		panic(err)
+	next.next = node
+	node.previous = next
+}
+
+func (head *Node) insertStart(node *Node) *Node {
+	head.previous = node
+	node.next = head
+	return node
+}
+
+func (indexNode *Node) insertAfter(node *Node) {
+	node.previous = indexNode
+	node.next = indexNode.next
+	indexNode.next.previous = node
+	indexNode.next = node
+}
+
+func (head *Node) deleteNode(node *Node) *Node {
+
+	if node == head {
+		node.next.previous = nil
+		return node.next
+	} else if node.next == nil {
+		node.previous.next = nil
+		return head
+	} else {
+		node.previous.next = node.next
+		node.next.previous = node.previous
+		return head
 	}
+}
 
-	win.SetSmooth(false)
+func (head *Node) displayList() {
 
-	for !win.JustPressed(pixelgl.KeyEscape) {
-		win.Clear(pixel.RGB(0, 0, 0))
-
-		win.Update()
+	fmt.Println("Head = ", head.value)
+	next := head.next
+	counter := 1
+	for next != nil {
+		fmt.Println("Node", counter, "=", next.value)
+		counter++
+		next = next.next
 	}
+}
+
+func main() {
+	head := createNode(1)
+
+	newNode := createNode(5)
+
+	head.insertEnd(newNode)
+
+	head.displayList()
+	fmt.Println("")
+
+	head = head.deleteNode(newNode)
+
+	head.displayList()
 }
